@@ -2,10 +2,6 @@ package analysis;
 
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Provides a list of useful methods converting between different types of sound classes.

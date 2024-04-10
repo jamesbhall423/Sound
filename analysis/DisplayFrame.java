@@ -3,9 +3,6 @@ package analysis;
 import javax.swing.JFrame;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
-import java.awt.Image;
 
 public class DisplayFrame extends JFrame {
     public DisplayFrame(double[][] marking) {
