@@ -41,3 +41,13 @@
 * Data for in-betwwen time interval is straightforward. Use FFT for in-between time interval.
 * Data for in-between frequency: shift values by the given frequency shift (10hz). This will provide values for 10hz, 60hz, ect.
 * All phases will have to be adjusted to fit the start of the image, not the start of the sampling interval.
+
+## Sound localization without sound identification
+
+* Identifying sounds is a difficult matter. Not only would seperating the sounds be dificult on the computer, it would be difficult for the user to specify the sounds that they are looking for.
+* Therefore, it is better for the user to search by location, rather than by sound.
+* The function, then, would take in the estimated synchronized sounds, and the distance from the point in question to each one.
+* Each sound should have a main freq-time image (see Audio Color Image), and a smeared one.
+* The smeared image should be smeared by frequency 1-2%, the new value being the maximum absolute amplitude in that range.
+* To assemble the result, take two images. One is the main image of the closest source, the other is are is the average of the images of the other recordings, adjusted for magnitude (inverse of distance), and time.
+* If the value on the main recording is larger than that predicted by the other recordings, the value is reduced to the predicted value. 
