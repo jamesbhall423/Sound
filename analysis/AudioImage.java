@@ -138,12 +138,12 @@ public class AudioImage implements ImageProducer {
         }
         return out;
     }
-    private void loadImage(double[][][] freqTimePhaseValues, int freqResolution) {
-        double[][][] hsb = new double[freqTimePhaseValues.length][freqTimePhaseValues[0].length][3];
+    private void loadImage(double[][][] timeFreqPhaseValues, int freqResolution) {
+        double[][][] hsb = new double[timeFreqPhaseValues.length][timeFreqPhaseValues[0].length][3];
         for (int i = 0; i < hsb.length; i++) for (int j = 0; j < hsb[0].length; j++) {
-            hsb[i][j][0] = freqTimePhaseValues[i][j][1];
-            hsb[i][j][1] = getSaturation(freqTimePhaseValues[i],j,freqResolution);
-            hsb[i][j][2] = freqTimePhaseValues[i][j][0];
+            hsb[i][j][0] = timeFreqPhaseValues[i][j][1];
+            hsb[i][j][1] = getSaturation(timeFreqPhaseValues[i],j,freqResolution);
+            hsb[i][j][2] = timeFreqPhaseValues[i][j][0];
         }
         float[][][] normalHSB = normalizeHSB(hsb);
         int[][] picture = convertToRGB(normalHSB);
