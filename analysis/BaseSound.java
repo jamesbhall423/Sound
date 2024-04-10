@@ -55,7 +55,7 @@ public class BaseSound implements Sound {
         return out;
     }
     @Override
-    public double[][] freqValues(double start, double end, int samples) {
+    public double[][] freqPhaseValues(double start, double end, int samples) {
         boolean[] realChannels = new boolean[values[0].length];
         boolean[] imagChannels = new boolean[values[0].length];
         for (int i = 0; i < values[0].length; i++) {

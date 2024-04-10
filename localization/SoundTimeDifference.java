@@ -17,7 +17,7 @@ public class SoundTimeDifference {
         return soundA.getSound(Converter.euclidianCoordinates(polarC), INTERVAL);
     }
     private static double[][] polarFreq(Sound sound) {
-        double[][] freq = sound.freqValues(0, INTERVAL, SAMPLES);
+        double[][] freq = sound.freqPhaseValues(0, INTERVAL, SAMPLES);
         return Converter.polarCoordinates(freq);
     }
 }

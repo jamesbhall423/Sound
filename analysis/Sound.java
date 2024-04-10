@@ -10,7 +10,7 @@ public interface Sound {
     public double[] amplitude(double start, double end, double freq);
     public int channels();
     public double[] pressureValues(double start, double end, int samples);
-    public double[][] freqValues(double start, double end, int samples);
+    public double[][] freqPhaseValues(double start, double end, int samples);
     public Sound getSound(double[][] freqValues, double length);
     public Sound getShiftedByPhase(double freq,double startOffset);
     public double energy(double start, double end);

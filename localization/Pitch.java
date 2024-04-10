@@ -44,7 +44,7 @@ public abstract class Pitch implements SoundPart {
     }
 
     @Override
-    public double[][] freqValues(double start, double end, int samples) {
+    public double[][] freqPhaseValues(double start, double end, int samples) {
         int freqIndex = (int) (frequency*(end-start)/samples);
         double[][] out = new double[samples][2];
         out[freqIndex] = (double[]) amplitude.clone();

@@ -56,6 +56,12 @@ public class PitchFactory implements SoundPartFactory  {
             else if (endFreq > o.endFreq) return 1;
             else return 0;
         }
+
+        @Override
+        public Sound scaleVolume(double scale) {
+            // TODO Auto-generated method stub
+            throw new UnsupportedOperationException("Unimplemented method 'scaleVolume'");
+        }
     }
     @Override
     public SoundPart CreateSoundPart(Sound sound) {
@@ -68,7 +74,7 @@ public class PitchFactory implements SoundPartFactory  {
         int index = 0;
         List<Pitch> out = new ArrayList<Pitch>();
         for (double start = 0; start+interval < sound.length(); start+=interval) {
-            double[][] freqValues = sound.freqValues(start, start+interval, 2*numFrequencies);
+            double[][] freqValues = sound.freqPhaseValues(start, start+interval, 2*numFrequencies);
             freqTimeValues[index]=freqValues;
             index++;
         }

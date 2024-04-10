@@ -29,8 +29,8 @@ public class ClippedSound implements Sound {
     }
 
     @Override
-    public double[][] freqValues(double start, double end, int samples) {
-        return baseSound.freqValues(start+startOffset, end+startOffset, samples);
+    public double[][] freqPhaseValues(double start, double end, int samples) {
+        return baseSound.freqPhaseValues(start+startOffset, end+startOffset, samples);
     }
 
     @Override

@@ -39,7 +39,7 @@ public class AudioImage implements ImageProducer {
         timeResolution = interval;
         freqResolution = 1/interval;
         for (double start = 0; start+interval < sound.length(); start+=interval) {
-            double[][] freqValues = sound.freqValues(start, start+interval, 2*numFrequencies);
+            double[][] freqValues = sound.freqPhaseValues(start, start+interval, 2*numFrequencies);
             for (int i = 0; i < numFrequencies; i++) {
                 freqTimeValues[index][i] = Math.sqrt(i)*Math.sqrt(freqValues[i][0]*freqValues[i][0]+freqValues[i][1]*freqValues[i][1]);
             }
@@ -114,7 +114,7 @@ public class AudioImage implements ImageProducer {
         double[][][][] freqTimeFreqPhaseValues = new double[sounds.length][(int)(sound.length()/timeResolution)][][];
         for (int freqShiftIndex = 0; freqShiftIndex < freqTimeFreqPhaseValues.length; freqShiftIndex++) for (int timeIndex = 0; timeIndex < freqTimeFreqPhaseValues[freqShiftIndex].length; timeIndex++) {
             double time = timeResolution*timeIndex;
-            freqTimeFreqPhaseValues[freqShiftIndex][timeIndex] = chopArray(sounds[freqShiftIndex].freqValues(time, time+samplingInterval, samplingResolution),100,time,samplingInterval);
+            freqTimeFreqPhaseValues[freqShiftIndex][timeIndex] = chopArray(sounds[freqShiftIndex].freqPhaseValues(time, time+samplingInterval, samplingResolution),100,time,samplingInterval);
         }
         double[][][] timeFreqPhaseValues = new double[freqTimeFreqPhaseValues[0].length][freqTimeFreqPhaseValues.length*freqTimeFreqPhaseValues[0][0].length][2];
         for (int i = 0; i < timeFreqPhaseValues.length; i++) for (int j = 0; j < timeFreqPhaseValues[i].length; j++) {

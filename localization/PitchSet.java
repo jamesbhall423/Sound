@@ -92,7 +92,7 @@ public class PitchSet implements Comparable<PitchSet> {
         int samples = Converter.power2Higher(filtered.length()*samplesPerSecond);
         int indexStart = (int) Math.max(0,minFreq*filtered.length()-1);
         int indexEnd = (int) Math.min(samples,Math.ceil(maxFreq*filtered.length())+1);
-        double[][] freqValues = filtered.freqValues(0, filtered.length(), samples);
+        double[][] freqValues = filtered.freqPhaseValues(0, filtered.length(), samples);
         double[] freqAmplitudes = Converter.flipArrayDimensions(Converter.polarCoordinates(freqValues))[0];
         for (int i = indexStart; i < indexEnd; i++) {
             rotationalContributions+=freqAmplitudes[i]*i/filtered.length();
