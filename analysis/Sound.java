@@ -21,6 +21,7 @@ public interface Sound {
     public Sound trimEnd(double end);
     public Sound retime(double shiftStart, double scale);
     public Sound removeCorrelation(CorrelDetails details, boolean latter);
+    public Sound scaleVolume(double scale);
     public Sound negate();
     public Sound combine(Sound other, double startThis, double startOther, double endThis, double endOther, double ampThis, double ampOther);
 }

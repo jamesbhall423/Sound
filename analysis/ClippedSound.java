@@ -108,4 +108,9 @@ public class ClippedSound implements Sound {
        return new ClippedSound(baseSound.getShiftedByPhase(freq,startOffset+paramOffset), startOffset, endOffset);
     }
 
+    @Override
+    public Sound scaleVolume(double scale) {
+        return new ClippedSound(baseSound.scaleVolume(scale), startOffset, endOffset);
+    }
+
 }
