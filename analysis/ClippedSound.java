@@ -113,4 +113,9 @@ public class ClippedSound implements Sound {
         return new ClippedSound(baseSound.scaleVolume(scale), startOffset, endOffset);
     }
 
+    @Override
+    public Sound getSound(double[][][] timeFreqPhaseValues, double length) {
+        return baseSound.getSound(timeFreqPhaseValues, length);
+    }
+
 }

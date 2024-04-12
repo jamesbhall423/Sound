@@ -167,4 +167,14 @@ public class BaseSound implements Sound {
         }
         return new BaseSound(out,samplesPerSecond);
     }
+    @Override
+    public Sound getSound(double[][][] timeFreqPhaseValues, double length) {
+        double[][][] flipFreq = new double[timeFreqPhaseValues.length][][];
+        for (int i = 0; i < timeFreqPhaseValues.length; i++) flipFreq[i] = Converter.flipArrayDimensions(timeFreqPhaseValues[i]);
+        double[][][] soundValueSections = new double[flipFreq.length][][];
+        for (int i = 0; i < timeFreqPhaseValues.length; i++) soundValueSections[i] = Converter.fft(flipFreq[i][0],flipFreq[i][1],true);
+        double[][] soundValues = new double[soundValueSections.length*soundValueSections[0].length][];
+        for (int i = 0; i < soundValues.length; i++) soundValues[i] = soundValueSections[i/soundValueSections[0].length][i%soundValueSections[0].length];
+        return new BaseSound(soundValues,soundValues.length/length);
+    }
 }

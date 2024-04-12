@@ -62,6 +62,12 @@ public class PitchFactory implements SoundPartFactory  {
             // TODO Auto-generated method stub
             throw new UnsupportedOperationException("Unimplemented method 'scaleVolume'");
         }
+
+        @Override
+        public Sound getSound(double[][][] timeFreqPhaseValues, double length) {
+            // TODO Auto-generated method stub
+            throw new UnsupportedOperationException("Unimplemented method 'getSound'");
+        }
     }
     @Override
     public SoundPart CreateSoundPart(Sound sound) {
