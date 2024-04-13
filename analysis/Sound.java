@@ -10,6 +10,7 @@ public interface Sound {
     public double[] amplitude(double start, double end, double freq);
     public int channels();
     public double[] pressureValues(double start, double end, int samples);
+    public double[] pressureValuesByChannel(double start, double end, int samples, int channel);
     public double[][] freqPhaseValues(double start, double end, int samples);
     public Sound getSound(double[][][] timeFreqPhaseValues, double length);
     public Sound getSound(double[][] freqValues, double length);

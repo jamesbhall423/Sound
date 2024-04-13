@@ -35,6 +35,12 @@ public class BaseSound implements Sound {
         Arrays.fill(channels, true);
         return pressureValues(start, end, samples,channels);
     }
+    @Override
+    public double[] pressureValuesByChannel(double start, double end, int samples, int channel) {
+        boolean[] channels = new boolean[values[0].length];
+        channels[channel] = true;
+        return pressureValues(start, end, samples,channels);
+    }
 
     public double[] pressureValues(double start, double end, int samples, boolean[] channels) {
         double valuesPerSample = (end-start)*samplesPerSecond / samples;

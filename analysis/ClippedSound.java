@@ -24,6 +24,10 @@ public class ClippedSound implements Sound {
         return baseSound.pressureValues(start+startOffset, end+startOffset, samples);
     }
     @Override
+    public double[] pressureValuesByChannel(double start, double end, int samples, int channel) {
+        return baseSound.pressureValuesByChannel(start+startOffset, end+startOffset, samples, channel);
+    }
+    @Override
     public double[] pressureValues(double start, double end, int samples, boolean[] channels) {
         return baseSound.pressureValues(start, end, samples,channels);
     }

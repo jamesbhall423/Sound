@@ -68,6 +68,12 @@ public class PitchFactory implements SoundPartFactory  {
             // TODO Auto-generated method stub
             throw new UnsupportedOperationException("Unimplemented method 'getSound'");
         }
+
+        @Override
+        public double[] pressureValuesByChannel(double start, double end, int samples, int channel) {
+            // TODO Auto-generated method stub
+            throw new UnsupportedOperationException("Unimplemented method 'pressureValuesByChannel'");
+        }
     }
     @Override
     public SoundPart CreateSoundPart(Sound sound) {
