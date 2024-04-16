@@ -7,7 +7,7 @@ import java.io.InputStream;
 import javax.sound.sampled.*;
 public class SoundInput {
     private AudioFormat format;
-    private byte[] samples;
+    public byte[] samples;
     /**
      * 
      * @param filename le lien vers le fichier song (URL ou absolute path)
@@ -39,6 +39,10 @@ public class SoundInput {
         if (!(format.getEncoding().equals(AudioFormat.Encoding.PCM_SIGNED)||format.getEncoding().equals(AudioFormat.Encoding.PCM_UNSIGNED))) {
             throw new UnsupportedOperationException(format.getEncoding()+" is not supported.");
         }
+        long[][] out = getLongValues();
+        return new BaseSound(out,format.getFrameRate());
+    }
+    public long[][] getLongValues() {
         int sampleByteSize = format.getSampleSizeInBits()/8;
         long[][] out = new long[samples.length/format.getFrameSize()][format.getChannels()];
         for (int sample = 0; sample < out.length; sample++) {
@@ -53,7 +57,7 @@ public class SoundInput {
                 }
             }
         }
-        return new BaseSound(out,format.getFrameRate());
+        return out;
     }
     private int getByte(int sample,int channel,int bite) {
         int out = samples[sample*format.getFrameSize()+channel*format.getChannels()+bite];

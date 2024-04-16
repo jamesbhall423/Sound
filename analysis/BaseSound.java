@@ -51,7 +51,8 @@ public class BaseSound implements Sound {
                 int index = (int)(Math.floor(ref));
                 double frac = ref - index;
                 for (int j = 0; j < values[index].length; j++) if (channels[j]) {
-                    out[i]+=frac*values[index][j]+(1-frac)*values[index+1][j];
+                    if (index-1>=0&&index+2<values.length) out[i] += Converter.cubicInterpolation(values[index-1][j], values[index][j], values[index+1][j], values[index+2][j], frac-0.5);
+                    else out[i]+=frac*values[index][j]+(1-frac)*values[index+1][j];
                     numRef++;
                 }
             }

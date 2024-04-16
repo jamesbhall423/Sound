@@ -134,6 +134,13 @@ public class Converter implements Serializable {
         }
         return out;
     }
+    public static long[][] flipArrayDimensions(long[][] in) {
+        long[][] out = new long[in[0].length][in.length];
+        for (int x = 0; x < in.length; x++) for (int y = 0; y < in[x].length; y++) {
+            out[y][x] = in[x][y];
+        }
+        return out;
+    }
     public static double[][] polarCoordinates(double[][] euclidian) {
         double[][] polar = new double[euclidian.length][2];
         for (int i = 0; i < polar.length; i++) {
@@ -183,5 +190,18 @@ public class Converter implements Serializable {
     }
     public static double floor(double number, double divisor) {
         return Math.floor(number/divisor)*divisor;
+    }
+    private static final double ONE_POINT_FIVE_CUBED = Math.pow(1.5,3); 
+    public static double cubicInterpolation(double n1, double n2, double n3, double n4, double x) {
+        double yddd = ydd(n4,n3,n2)-ydd(n3,n2,n1);
+        double ydd = (ydd(n4,n3,n2)+ydd(n3,n2,n1))/2;
+        double x3 = yddd / 6;
+        double x2 = ydd / 2;
+        double x1 = (n4-n1-2*ONE_POINT_FIVE_CUBED*x3)/3;
+        double x0 = (n1+n2+n3+n4-5*x2)/4;
+        return x3*x*x*x + x2*x*x + x1*x + x0;
+    }
+    private static double ydd(double n1, double n2, double n3) {
+        return (n3-n2)-(n2-n1);
     }
 }
