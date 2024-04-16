@@ -2,6 +2,8 @@ package analysis;
 
 import java.io.File;
 
+import javax.sound.sampled.LineUnavailableException;
+
 import localization.CorrelDetails;
 
 public class ClippedSound implements Sound {
@@ -50,8 +52,11 @@ public class ClippedSound implements Sound {
 
     @Override
     public void play() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'play'");
+        try {
+            SoundOutput.playSound(this);
+        } catch (LineUnavailableException e) {
+            
+        }
     }
 
     @Override

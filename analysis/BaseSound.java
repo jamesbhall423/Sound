@@ -3,6 +3,8 @@ package analysis;
 import java.io.File;
 import java.util.Arrays;
 
+import javax.sound.sampled.LineUnavailableException;
+
 import localization.CorrelDetails;
 
 public class BaseSound implements Sound {
@@ -103,8 +105,11 @@ public class BaseSound implements Sound {
 
     @Override
     public void play() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'play'");
+        try {
+            SoundOutput.playSound(this);
+        } catch (LineUnavailableException e) {
+            
+        }
     }
 
     @Override
