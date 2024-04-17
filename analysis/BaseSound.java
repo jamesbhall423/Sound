@@ -174,7 +174,7 @@ public class BaseSound implements Sound {
     @Override
     public Sound scaleVolume(double scale) {
         double[][] out = new double[values.length][values[0].length];
-        for (int i = 0; i < out.length; i++) for (int j = 0; j < out.length; j++) {
+        for (int i = 0; i < out.length; i++) for (int j = 0; j < out[0].length; j++) {
             out[i][j] = scale * values[i][j];
         }
         return new BaseSound(out,samplesPerSecond);
