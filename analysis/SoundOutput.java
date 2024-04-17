@@ -3,7 +3,6 @@ package analysis;
 import javax.sound.sampled.*;
 
 public class SoundOutput {
-    private static final int BUFFER_SIZE = 4096;
     public static void playSound(Sound in) throws LineUnavailableException {
         SourceDataLine output;
         try {

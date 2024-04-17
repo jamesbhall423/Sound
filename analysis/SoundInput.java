@@ -3,7 +3,6 @@ package analysis;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import javax.sound.sampled.*;
 public class SoundInput {
     private AudioFormat format;
