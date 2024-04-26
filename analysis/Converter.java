@@ -162,6 +162,9 @@ public class Converter implements Serializable {
         }
         return euclidian;
     }
+    public static double[] euclidianPoint(double[] polar) {
+        return new double[] {polar[0]*Math.cos(polar[1]),polar[0]*Math.sin(polar[1])};
+    }
     public static double[][] fromLong(long[][] in) {
         double[][] out = new double[in.length][in[0].length];
         for (int y = 0; y < in.length; y++) for (int x = 0; x < in[y].length; x++) {
@@ -175,18 +178,16 @@ public class Converter implements Serializable {
         return out;
     }
     public static double[] adjustPointBack(double[] in, double freq, double time) {
-        double[] out = new double[2];
-        // out[0] = in[0]*Math.cos(2*Math.PI*freq*time)-in[1]*Math.sin(2*Math.PI*freq*time);
-        // out[1] = in[1]*Math.cos(2*Math.PI*freq*time)+in[0]*Math.sin(2*Math.PI*freq*time);
-        out[0] = in[0]*Math.cos(2*Math.PI*freq*time)+in[1]*Math.sin(2*Math.PI*freq*time);
-        out[1] = in[1]*Math.cos(2*Math.PI*freq*time)-in[0]*Math.sin(2*Math.PI*freq*time);
-        return out;
+        return multiplyPoint(in,rotationAtTime(freq,-time));
     }
     public static double[] adjustPointForward(double[] in, double freq, double time) {
-        double[] out = new double[2];
-        out[0] = in[0]*Math.cos(2*Math.PI*freq*time)-in[1]*Math.sin(2*Math.PI*freq*time);
-        out[1] = in[1]*Math.cos(2*Math.PI*freq*time)+in[0]*Math.sin(2*Math.PI*freq*time);
-        return out;
+        return multiplyPoint(in, rotationAtTime(freq, time));
+    }
+    public static double[] adjustPolarPointBack(double[] in, double freq, double time) {
+        return new double[] {in[0],in[1]-2*Math.PI*freq*time};
+    }
+    public static double[] adjustPolarPointForward(double[] in, double freq, double time) {
+        return new double[] {in[0],in[1]+2*Math.PI*freq*time};
     }
     public static double floor(double number, double divisor) {
         return Math.floor(number/divisor)*divisor;
@@ -203,5 +204,37 @@ public class Converter implements Serializable {
     }
     private static double ydd(double n1, double n2, double n3) {
         return (n3-n2)-(n2-n1);
+    }
+    public static double[] freqCorrelation(double freqIndex1, double freqIndex2, double freqRatio) {
+        //Residual: given freq num a -> e^(2PIiax) -> residual at b = e^(-2PIibx)*e^(2PIiax) = e^(2PIi(a-b)x)
+        //Integral (0,1) e^(2PIi(a-b)x) = i(1-e^(2PIi(b-a)))/2PI(b-a)
+        // = 
+        double[] out = new double[2];
+        double bMinusA = (freqIndex2-freqIndex1)/freqRatio;
+        out[1] = (Math.cos(2*Math.PI*bMinusA)-1)/(2*Math.PI*bMinusA);
+        out[0] = Math.sin(2*Math.PI*bMinusA)/(2*Math.PI*bMinusA);
+        return out;
+    }
+    public static double[] multiplyPoint(double[] point1, double[] point2) {
+        return new double[] {point1[0]*point2[0]-point1[1]*point2[1], point1[0]*point2[1]+point1[1]*point2[0]};
+    }
+    public static double[] rotationAtTime(double freq, double time) {
+        return new double[]{Math.cos(2*Math.PI*freq*time), Math.sin(2*Math.PI*freq*time)};
+    }
+    public static double[] residualFrequency(double freqIndex1, double freqIndex2, double freqRatio, double[] in) {
+        return multiplyPoint(in, freqCorrelation(freqIndex1,freqIndex2,freqRatio));
+    }
+    public static double[] subtractResidualFrequency(double freqIndex1, double freqIndex2, double freqRatio, double[] in, double[] out) {
+        double[] residual = residualFrequency(freqIndex1, freqIndex2, freqRatio, in);
+        out[0] -= residual[0];
+        out[1] -= residual[1];
+        return out;
+    }
+    public static double[] polarSubtractResidualFrequency(double freqIndex1, double freqIndex2, double freqRatio, double[] in, double[] out) {
+        double[] ecOut = subtractResidualFrequency(freqIndex1, freqIndex2, freqRatio, euclidianPoint(in),euclidianPoint(out));
+        double[] plOut = polarPoint(ecOut);
+        out[0] = plOut[0];
+        out[1] = plOut[1];
+        return out;
     }
 }
