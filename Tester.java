@@ -19,6 +19,36 @@ public class Tester {
     private static final String PHONE_RECORDING = "Location Experiment Phone.wav";
     private static final String LAPTOP_RECORDING = "Localization Experiment Recording Laptop.wav";
     public static void main(String[] args) throws LineUnavailableException, UnsupportedAudioFileException, IOException {
+        // double[][] values = new double[1028][2];
+        // double freq1 = 17.5;
+        // for (int i = 0; i < values.length; i++) {
+        //     values[i][0] = Math.cos(2*Math.PI*freq1*i/1028.0);
+        //     values[i][1] = Math.sin(2*Math.PI*freq1*i/1028.0);
+        // }
+        // double freq2 = 18.3;
+        // double[] sum = new double[2];
+        // for (int i = 0; i < values.length; i++) {
+        //     sum[0] += Math.cos(2*Math.PI*-freq2*i/1028.0)*values[i][0]/1028;
+        //     sum[0] += -Math.sin(2*Math.PI*-freq2*i/1028.0)*values[i][1]/1028;
+        //     sum[1] += Math.sin(2*Math.PI*-freq2*i/1028.0)*values[i][0]/1028;
+        //     sum[1] += Math.cos(2*Math.PI*-freq2*i/1028.0)*values[i][1]/1028;
+        // }
+        // System.out.println(sum[0]+" "+sum[1]);
+        // double[] expected = Converter.residualFrequency((int)(freq1*10), (int)(freq2*10), 10, new double[] {1,0});
+        // System.out.println(expected[0]+" "+expected[1]);
+        Sound baseSound = new BaseSound(new double[0][0], 44100);
+        double[][] freqValues = new double[2048*16*8][2];
+        freqValues[995][1]= 1000;
+        freqValues[1995][1]= 1000;
+        Sound testSound = baseSound.getSound(freqValues, 5);
+        new DisplayFrame(new AudioImage(testSound,0,false),"test1");
+        new DisplayFrame(new AudioImage(testSound,100,false),"test clean");
+        String filename = "Piano A440.wav";
+        double start = 0;
+        SoundInput input = new SoundInput(filename);
+        new DisplayFrame(new AudioImage(input.getSound().trimStart(start).trimEnd(5),25,false),filename);
+    }
+    private static void testExperiment() {
         Sound phoneSound = new SoundInput(PHONE_RECORDING).getSound().trimStart(PHONE_DELAY+START).trimEnd(END);
         Sound laptopSound = new SoundInput(LAPTOP_RECORDING).getSound().trimStart(START).trimEnd(END).scaleVolume(3);
         System.out.println(phoneSound.energy(0,END));
