@@ -19,6 +19,6 @@ public class SoundGraph {
         double start = keyboard.nextDouble();
         keyboard.nextLine();
         SoundInput input = new SoundInput(filename);
-        new DisplayFrame(new AudioImage(input.getSound().trimStart(start).trimEnd(5),25,true),filename+"25");
+        new DisplayFrame(new AudioImage(input.getSound().trimStart(start).trimEnd(5),25,true),filename);
     }
 }
