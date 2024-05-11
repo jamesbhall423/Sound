@@ -10,6 +10,12 @@ import localization.CorrelDetails;
 public class BaseSound implements Sound {
     private final double[][] values;
     private final double samplesPerSecond;
+    public void printValues(int start, int end) {
+        System.out.println(values[0].length);
+        for (int i = start; i < end; i++) {
+            System.out.println(values[i][0]+" "+values[i][1]);
+        }
+    }
     public BaseSound(long[][] values, double samplesPerSecond) {
         this.values = Converter.fromLong(values);
         this.samplesPerSecond = samplesPerSecond;
@@ -149,8 +155,18 @@ public class BaseSound implements Sound {
     @Override
     public Sound combine(Sound other, double startThis, double startOther, double endThis, double endOther,
             double ampThis, double ampOther) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'combine'");
+        int startValue = (int)(samplesPerSecond*startThis);
+        int endValue = (int)(samplesPerSecond*endThis);
+        int outlength = endValue-startValue;
+        double[] values0Other = other.pressureValuesByChannel(startOther, endOther, outlength, 0);
+        double[] values1Other = other.pressureValuesByChannel(startOther, endOther, outlength, 1);
+        double[][] valuesOut = new double[outlength][2];
+        for (int i = 0; i < outlength; i++) {
+            valuesOut[i][0] = ampThis*values[i+startValue][0] + ampOther*values0Other[i];
+            valuesOut[i][1] = ampThis*values[i+startValue][1] + ampOther*values1Other[i];
+        }
+        Sound out = new BaseSound(valuesOut,samplesPerSecond);
+        return out;
     }
     @Override
     public Sound getSound(double[][] freqValues, double length) {
@@ -180,7 +196,7 @@ public class BaseSound implements Sound {
         return new BaseSound(out,samplesPerSecond);
     }
     @Override
-    public Sound getSound(double[][][] timeFreqPhaseValues, double length) {
+    public BaseSound getSound(double[][][] timeFreqPhaseValues, double length) {
         double[][][] flipFreq = new double[timeFreqPhaseValues.length][][];
         for (int i = 0; i < timeFreqPhaseValues.length; i++) flipFreq[i] = Converter.flipArrayDimensions(timeFreqPhaseValues[i]);
         double[][][] soundValueSections = new double[flipFreq.length][][];

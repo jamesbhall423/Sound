@@ -1,6 +1,7 @@
 import java.util.Scanner;
 
 import analysis.AudioImage;
+import analysis.AudioImageConverter;
 import analysis.DisplayFrame;
 import analysis.Sound;
 import analysis.SoundInput;
@@ -20,6 +21,7 @@ public class SoundGraph {
         keyboard.nextLine();
         SoundInput input = new SoundInput(filename);
         keyboard.close();
-        new DisplayFrame(new AudioImage(input.getSound().trimStart(start).trimEnd(5),25,true),filename);
+        new DisplayFrame(new AudioImage(input.getSound().trimStart(start).trimEnd(5)),filename+" converter");
+        new DisplayFrame(new AudioImage(input.getSound().trimStart(start).trimEnd(5),10,true),filename);
     }
 }

@@ -99,8 +99,7 @@ public class ClippedSound implements Sound {
     @Override
     public Sound combine(Sound other, double startThis, double startOther, double endThis, double endOther,
             double ampThis, double ampOther) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'combine'");
+        return baseSound.combine(other,startThis+startOffset,startOther,endThis+startOffset,endOther,ampThis,ampOther);
     }
 
     @Override

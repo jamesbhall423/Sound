@@ -107,25 +107,17 @@ public class AudioImage implements ImageProducer {
         // Do nothing
     }
     public AudioImage(Sound sound) {
-        timeResolution = 0.005;
-        double samplingInterval = 0.02;
-        int samplingResolution = 1024;
-        Sound[] sounds = getPhaseShiftedSounds(sound);
-        double[][][][] freqTimeFreqPhaseValues = new double[sounds.length][(int)(sound.length()/timeResolution)][][];
-        for (int freqShiftIndex = 0; freqShiftIndex < freqTimeFreqPhaseValues.length; freqShiftIndex++) for (int timeIndex = 0; timeIndex < freqTimeFreqPhaseValues[freqShiftIndex].length; timeIndex++) {
-            double time = timeResolution*timeIndex;
-            freqTimeFreqPhaseValues[freqShiftIndex][timeIndex] = chopArray(sounds[freqShiftIndex].freqPhaseValues(time, time+samplingInterval, samplingResolution),100,time,samplingInterval);
-        }
-        double[][][] timeFreqPhaseValues = new double[freqTimeFreqPhaseValues[0].length][freqTimeFreqPhaseValues.length*freqTimeFreqPhaseValues[0][0].length][2];
-        for (int i = 0; i < timeFreqPhaseValues.length; i++) for (int j = 0; j < timeFreqPhaseValues[i].length; j++) {
-            timeFreqPhaseValues[i][j] = freqTimeFreqPhaseValues[j%5][i][j/5];
-        }
-        loadImage(timeFreqPhaseValues, freqTimeFreqPhaseValues.length);
+        AudioImageConverter converter = new AudioImageConverter(0.02, 1024, 100, 10, 5, 4, 44100);
+        double[][][] timeFreqPhaseValues = converter.getRawTimeFreqPhaseImage(sound);
+        converter.cleanTimeFreqPhaseImage(timeFreqPhaseValues);
+        this.freqResolution = converter.freqResolution();
+        this.timeResolution = converter.timeResolution();
+        loadImage(timeFreqPhaseValues, converter.numFreqDivisions());
     }
-    private boolean useShifted = false;
+    private boolean useShift = false;
     public AudioImage(Sound sound, int numClean, boolean useShifted) {
         residualPasses = numClean;
-        this.useShifted = useShifted;
+        this.useShift = useShifted;
         timeResolution = 0.005;
         double samplingInterval = 0.02;
         int samplingResolution = 1024;
@@ -158,11 +150,11 @@ public class AudioImage implements ImageProducer {
         }
         return out;
     }
-    private void loadImage(double[][][] timeFreqPhaseValues, int freqResolution) {
+    private void loadImage(double[][][] timeFreqPhaseValues, int numFreqDivisions) {
         double[][][] hsb = new double[timeFreqPhaseValues.length][timeFreqPhaseValues[0].length][3];
         for (int i = 0; i < hsb.length; i++) for (int j = 0; j < hsb[0].length; j++) {
             hsb[i][j][0] = timeFreqPhaseValues[i][j][1];
-            hsb[i][j][1] = getSaturation(timeFreqPhaseValues[i],j,freqResolution);
+            hsb[i][j][1] = getSaturation(timeFreqPhaseValues[i],j,numFreqDivisions);
             hsb[i][j][2] = timeFreqPhaseValues[i][j][0];
         }
         float[][][] normalHSB = normalizeHSB(hsb);
@@ -175,8 +167,8 @@ public class AudioImage implements ImageProducer {
             image[i+width*j] = picture[i][(height-j-1)];
         }
     }
-    private double getSaturation(double[][] freqValues,int index, int freqResolution) {
-        return freqValues[index][0] / (1+freqValues[index][0]+valueWithinBounds(freqValues, index-freqResolution)+valueWithinBounds(freqValues, index+freqResolution));
+    private double getSaturation(double[][] freqValues,int index, int numFreqDivisions) {
+        return freqValues[index][0] / (1+freqValues[index][0]+valueWithinBounds(freqValues, index-numFreqDivisions)+valueWithinBounds(freqValues, index+numFreqDivisions));
     }
     private double valueWithinBounds(double[][] aray, int index) {
         if (index >= 0 && index < aray.length) return aray[index][0];
@@ -231,7 +223,7 @@ public class AudioImage implements ImageProducer {
         if (maxIndex>1) allSelected[maxIndex-2] = true;
         if (maxIndex+1<freqPhaseValues.length) allSelected[maxIndex+1] = true;
         if (maxIndex+2<freqPhaseValues.length) allSelected[maxIndex+2] = true;
-        if (useShifted&&maxIndex>0 && maxIndex+1<freqPhaseValues.length) {
+        if (useShift&&maxIndex>0 && maxIndex+1<freqPhaseValues.length) {
             double marDif = (freqPhaseValues[maxIndex+1][0]-freqPhaseValues[maxIndex-1][0]) / (freqPhaseValues[maxIndex][0]+1);
             // Going halfway to another point produces one difference 1.5 times the freq resolution and one difference 0.5 times the freq resolution.
             // The expected magnitude overlap (for small values) is sin(pi*x)/(pi*x)
@@ -255,14 +247,14 @@ public class AudioImage implements ImageProducer {
     private void subtractResidualFrequencies(double[][] freqPhaseValues, int freqResolution, double freqIndex1, double[] phaseValue1, boolean[] allSelected) {
         for (int freqIndex2 = 0; freqIndex2 < freqPhaseValues.length; freqIndex2++) if (!allSelected[freqIndex2]) Converter.polarSubtractResidualFrequency(freqIndex1, freqIndex2, freqResolution, phaseValue1, freqPhaseValues[freqIndex2]);
     }
-    private void convertToLocalPhase(double[][][] timeFreqPhaseValues, int freqResolution, double samplingInterval, double timeResolution) {
+    private void convertToLocalPhase(double[][][] timeFreqPhaseValues, int numFreqDivisions, double samplingInterval, double timeResolution) {
         for (int i = 0; i < timeFreqPhaseValues.length; i++) for (int j = 0; j < timeFreqPhaseValues[i].length; j++) {
-            timeFreqPhaseValues[i][j] = Converter.adjustPolarPointForward(timeFreqPhaseValues[i][j], j/samplingInterval/freqResolution, i*timeResolution);
+            timeFreqPhaseValues[i][j] = Converter.adjustPolarPointForward(timeFreqPhaseValues[i][j], j/samplingInterval/numFreqDivisions, i*timeResolution);
         }
     }
-    private void convertToGlobalPhase(double[][][] timeFreqPhaseValues, int freqResolution, double samplingInterval, double timeResolution) {
+    private void convertToGlobalPhase(double[][][] timeFreqPhaseValues, int numFreqDivisions, double samplingInterval, double timeResolution) {
         for (int i = 0; i < timeFreqPhaseValues.length; i++) for (int j = 0; j < timeFreqPhaseValues[i].length; j++) {
-            timeFreqPhaseValues[i][j] = Converter.adjustPolarPointBack(timeFreqPhaseValues[i][j], j/samplingInterval/freqResolution, i*timeResolution);
+            timeFreqPhaseValues[i][j] = Converter.adjustPolarPointBack(timeFreqPhaseValues[i][j], j/samplingInterval/numFreqDivisions, i*timeResolution);
         }
     }
 }

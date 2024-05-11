@@ -3,11 +3,14 @@ import analysis.DisplayFrame;
 import analysis.Sound;
 import analysis.SoundInput;
 import analysis.SoundOutput;
+import analysis.Sounds;
 import location.Location3D;
 import location.SoundAtLocationEstimator;
 import location.SoundRecording;
 import analysis.AudioImage;
+import analysis.AudioImageConverter;
 import analysis.BaseSound;
+import analysis.ClippedSound;
 
 import javax.sound.sampled.*;
 import java.io.File;
@@ -19,36 +22,60 @@ public class Tester {
     private static final String PHONE_RECORDING = "Location Experiment Phone.wav";
     private static final String LAPTOP_RECORDING = "Localization Experiment Recording Laptop.wav";
     public static void main(String[] args) throws LineUnavailableException, UnsupportedAudioFileException, IOException {
-        // double[][] values = new double[1028][2];
-        // double freq1 = 17.5;
-        // for (int i = 0; i < values.length; i++) {
-        //     values[i][0] = Math.cos(2*Math.PI*freq1*i/1028.0);
-        //     values[i][1] = Math.sin(2*Math.PI*freq1*i/1028.0);
-        // }
-        // double freq2 = 18.3;
-        // double[] sum = new double[2];
-        // for (int i = 0; i < values.length; i++) {
-        //     sum[0] += Math.cos(2*Math.PI*-freq2*i/1028.0)*values[i][0]/1028;
-        //     sum[0] += -Math.sin(2*Math.PI*-freq2*i/1028.0)*values[i][1]/1028;
-        //     sum[1] += Math.sin(2*Math.PI*-freq2*i/1028.0)*values[i][0]/1028;
-        //     sum[1] += Math.cos(2*Math.PI*-freq2*i/1028.0)*values[i][1]/1028;
-        // }
-        // System.out.println(sum[0]+" "+sum[1]);
-        // double[] expected = Converter.residualFrequency((int)(freq1*10), (int)(freq2*10), 10, new double[] {1,0});
-        // System.out.println(expected[0]+" "+expected[1]);
-        Sound baseSound = new BaseSound(new double[0][0], 44100);
-        double[][] freqValues = new double[2048*16*8][2];
-        freqValues[995][1]= 1000;
-        freqValues[1995][1]= 1000;
-        Sound testSound = baseSound.getSound(freqValues, 5);
-        new DisplayFrame(new AudioImage(testSound,0,false),"test1");
-        new DisplayFrame(new AudioImage(testSound,100,false),"test clean");
-        String filename = "Piano A440.wav";
-        double start = 0;
-        SoundInput input = new SoundInput(filename);
-        new DisplayFrame(new AudioImage(input.getSound().trimStart(start).trimEnd(5),25,false),filename);
+        SoundInput input = new SoundInput("Music.wav");
+        Sound sound1 = input.getSound().trimEnd(6);
+        AudioImageConverter converter = new AudioImageConverter();
+        double[][][] inter = converter.getRawTimeFreqPhaseImage(sound1);
+        double[][] cleans = converter.cleanTimeFreqPhaseImage(inter);
+        Sound sound2 = converter.getSoundFromCleanedImage(inter, cleans);
+        // //Sound sound2 = converter.getSoundFromRawTimeFreqPhaseImage(converter.getRawTimeFreqPhaseImage(sound1));
+        sound1 = sound1.trimStart(0.02);
+        System.out.println(sound1.energy(1,2));
+        System.out.println(sound2.energy(1,2));
+        // new DisplayFrame(new AudioImage(sound1),"music1");
+        // new DisplayFrame(new AudioImage(sound2),"music2");
+        double[] soundThresholds = new double[] {0,200,500,1000,2000,5000,10000,20000};
+        testSoundCors(sound1,sound2,0,5,200000,1024,0.05, soundThresholds);
+        // sound1.play();
+        // sound2.play();
+    }
+    private static void testSoundCors(Sound sound1, Sound sound2, double start, double end, int samplesP, int samplesF, double fInterval, double[] soundThresholds) {
+        for (int i = 0; i+1 < soundThresholds.length; i++) {
+            System.out.println(soundThresholds[i]+" "+soundThresholds[i+1]);
+            Sound s1 = Sounds.filterFrequencies(sound1, 44100, soundThresholds[i], soundThresholds[i+1]);
+            Sound s2 = Sounds.filterFrequencies(sound2, 44100, soundThresholds[i], soundThresholds[i+1]);
+            System.out.println(s1.energy(start,end));
+            System.out.println(s2.energy(start,end));
+            double[][] pressureValues1 = new double[][] {s1.pressureValuesByChannel(start, end, samplesP, 0),s1.pressureValuesByChannel(start, end, samplesP, 1)};
+            double[][] pressureValues2 = new double[][] {s2.pressureValuesByChannel(start, end, samplesP, 0),s2.pressureValuesByChannel(start, end, samplesP, 1)};
+            System.out.println(testCorrelation(pressureValues1, pressureValues2));
+            double sumCor = 0.0;
+            int count = 0;
+            for (double s = start; s < end-fInterval; s+=fInterval) {
+                double[][] fpv1 = s1.freqPhaseValues(s, s+fInterval, samplesF);
+                double[][] fpv2 = s2.freqPhaseValues(s, s+fInterval, samplesF);
+                count++;
+                sumCor+=testCorrelation(fpv1, fpv2);
+            }
+            System.out.println(sumCor/count);
+        }
+        
+    }
+    private static double testCorrelation(double[][] input1, double[][] input2) {
+        double sumCor = 0.0;
+        double sumSq1 = 0.0;
+        double sumSq2 = 0.0;
+        for (int i = 0; i < input1.length; i++) for (int j = 0; j < input1[i].length; j++) {// if (!Double.isNaN(input1[i][j])&&!Double.isNaN(input2[i][j])) {
+            sumCor += input1[i][j]*input2[i][j];
+            sumSq1 += input1[i][j]*input1[i][j];
+            sumSq2 += input2[i][j]*input2[i][j];
+        }
+        return (sumCor*sumCor)/(sumSq1*sumSq2+0.00000001);
     }
     private static void testExperiment() {
+        
+    }
+    private static void testLocalization() {
         Sound phoneSound = new SoundInput(PHONE_RECORDING).getSound().trimStart(PHONE_DELAY+START).trimEnd(END);
         Sound laptopSound = new SoundInput(LAPTOP_RECORDING).getSound().trimStart(START).trimEnd(END).scaleVolume(3);
         System.out.println(phoneSound.energy(0,END));

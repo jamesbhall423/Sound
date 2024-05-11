@@ -31,10 +31,8 @@ public class Converter implements Serializable {
         double ld = Math.log(n) / Math.log(2.0);
 
         // Here I check if n is a power of 2. If exist decimals in ld, I quit
-        // from the function returning null.
         if (((int) ld) - ld != 0) {
-            System.out.println("The number of elements is not a power of 2.");
-            return null;
+            throw new IllegalArgumentException("The number of elements is not a power of 2.");
         }
 
         // Declaration and initialization of the variables
