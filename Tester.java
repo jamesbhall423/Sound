@@ -4,6 +4,7 @@ import analysis.Sound;
 import analysis.SoundInput;
 import analysis.SoundOutput;
 import analysis.Sounds;
+import location.AudioImageSoundEstimator;
 import location.Location3D;
 import location.SoundAtLocationEstimator;
 import location.SoundRecording;
@@ -17,27 +18,12 @@ import java.io.File;
 import java.io.IOException;
 public class Tester {
     private static final double PHONE_DELAY = 5.095;//5.095;
-    private static final double START = 1.5;
-    private static final double END = 1.5;
+    private static final double START = 11.5;
+    private static final double END = 2.5;
     private static final String PHONE_RECORDING = "Location Experiment Phone.wav";
     private static final String LAPTOP_RECORDING = "Localization Experiment Recording Laptop.wav";
     public static void main(String[] args) throws LineUnavailableException, UnsupportedAudioFileException, IOException {
-        SoundInput input = new SoundInput("Music.wav");
-        Sound sound1 = input.getSound().trimEnd(6);
-        AudioImageConverter converter = new AudioImageConverter();
-        double[][][] inter = converter.getRawTimeFreqPhaseImage(sound1);
-        double[][] cleans = converter.cleanTimeFreqPhaseImage(inter);
-        Sound sound2 = converter.getSoundFromCleanedImage(inter, cleans);
-        // //Sound sound2 = converter.getSoundFromRawTimeFreqPhaseImage(converter.getRawTimeFreqPhaseImage(sound1));
-        sound1 = sound1.trimStart(0.02);
-        System.out.println(sound1.energy(1,2));
-        System.out.println(sound2.energy(1,2));
-        // new DisplayFrame(new AudioImage(sound1),"music1");
-        // new DisplayFrame(new AudioImage(sound2),"music2");
-        double[] soundThresholds = new double[] {0,200,500,1000,2000,5000,10000,20000};
-        testSoundCors(sound1,sound2,0,5,200000,1024,0.05, soundThresholds);
-        // sound1.play();
-        // sound2.play();
+        testLocalization();
     }
     private static void testSoundCors(Sound sound1, Sound sound2, double start, double end, int samplesP, int samplesF, double fInterval, double[] soundThresholds) {
         for (int i = 0; i+1 < soundThresholds.length; i++) {
@@ -80,14 +66,15 @@ public class Tester {
         Sound laptopSound = new SoundInput(LAPTOP_RECORDING).getSound().trimStart(START).trimEnd(END).scaleVolume(3);
         System.out.println(phoneSound.energy(0,END));
         System.out.println(laptopSound.energy(0,END));
-        SoundRecording<Location3D> phoneRecording = new SoundRecording<>(phoneSound, new Location3D(0, 0, -1));
-        SoundRecording<Location3D> laptopRecording = new SoundRecording<>(laptopSound, new Location3D(0, 0, 1));
+        SoundRecording<Location3D> phoneRecording = new SoundRecording<>(phoneSound, new Location3D(0, 0, -0.0));
+        SoundRecording<Location3D> laptopRecording = new SoundRecording<>(laptopSound, new Location3D(0, 0, 0.1));
         @SuppressWarnings("unchecked")
         SoundRecording<Location3D>[] recordings = new SoundRecording[] {laptopRecording,phoneRecording};
-        for (double dif = -0.1; dif < 0.1; dif += 0.01) {
-            Sound out = SoundAtLocationEstimator.STANDARD_INSTANCE.estimateSoundAtLocation(recordings, new Location3D(0, 0, dif));
+        for (double dif = 0.01; dif < 0.1; dif += 0.02) {
+            Sound out = new AudioImageSoundEstimator<Location3D>(new AudioImageConverter(0.02, 1024, 1024, 10, 5, 4, 44100),0.01).estimateSoundAtLocation(recordings, new Location3D(0, 0, dif));
             //new DisplayFrame(new AudioImage(out),"Combined Experiment");
             out.play();
+            System.out.println(out.energy(0,END));
             System.out.println(dif);
         }
     }

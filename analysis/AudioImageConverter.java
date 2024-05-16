@@ -41,6 +41,12 @@ public class AudioImageConverter {
     public double timeResolution() {
         return timeResolution;
     }
+    public int samplingResolution() {
+        return samplingResolution;
+    }
+    public double samplingInterval() {
+        return samplingInterval;
+    }
     public double[][][] getRawTimeFreqPhaseImage(Sound sound) {
         Sound[] sounds = getPhaseShiftedSounds(sound);
         double[][][][] freqTimeFreqPhaseValues = getFreqTimeFreqPhaseValues(sounds);
@@ -194,5 +200,48 @@ public class AudioImageConverter {
     private void addResidualFrequencies(double[][] freqPhaseValues, double freqIndex1, double[] phaseValue1, int[] allSelected, int index) {
         double[] reversePhaseValue1 = new double[] {phaseValue1[0],phaseValue1[1]+Math.PI};
         for (int freqIndex2 = 0; freqIndex2 < freqPhaseValues.length; freqIndex2++) if (allSelected[freqIndex2]==0||Math.abs(freqIndex2-freqIndex1)<2.5&&Math.abs(freqIndex2-freqIndex1)>1) Converter.polarSubtractResidualFrequency(freqIndex1, freqIndex2, numFreqDivisions, reversePhaseValue1, freqPhaseValues[freqIndex2]);
+    }
+    public double[][] timeFreqAmpValues(double[][][] timeFreqPhaseValues) {
+        double[][] out = new double[timeFreqPhaseValues.length][timeFreqPhaseValues[0].length];
+        for (int i = 0; i < out.length; i++) for (int j = 0; j < out[i].length; j++) {
+            out[i][j] = timeFreqPhaseValues[i][j][0];
+        }
+        return out;
+    }
+    public double[][] smear(double[][] timeFreqValues, double percentDifference) {
+        double[][] out = new double[timeFreqValues.length][timeFreqValues[0].length];
+        for (int i = 0; i < out.length; i++) for (int j = 0; j < out[i].length; j++) for (int k = (int)Math.floor((1-percentDifference)*j); k <= Math.ceil((1+percentDifference)*j)&&k<out[i].length; k++) {
+            double absDifference = (j-k)/((j+1)*percentDifference);
+            double ratio = Math.exp(-absDifference*absDifference);
+            if (timeFreqValues[i][k]*ratio>out[i][j]) out[i][j]=timeFreqValues[i][k]*ratio;
+        }
+        //Marge positive and negative frequencies
+        for (int i = 0; i < out.length; i++) for (int j = 1; j < out[i].length; j++) {
+            if (out[i][out[i].length-j]>out[i][j]) out[i][j] = out[i][out[i].length-j];
+        }
+        return out;
+    }
+    public double[][][] getConsistentTimeFreqPhaseImage(double[][][] timeFreqPhaseValues, double[][] other, double otherAmp) {
+        double[][][] out = new double[Math.min(timeFreqPhaseValues.length,other.length)][timeFreqPhaseValues[0].length][2];
+        for (int i = 0; i < out.length; i++) for (int j = 0; j < out[i].length; j++) {
+            out[i][j][1] = timeFreqPhaseValues[i][j][1];
+            if (other[i][j]*otherAmp>=timeFreqPhaseValues[i][j][0]) out[i][j][0] = timeFreqPhaseValues[i][j][0]*timeFreqPhaseValues[i][j][0]/(other[i][j]*otherAmp);
+            else out[i][j][0] = other[i][j]*otherAmp;
+        }
+        return out;
+    }
+    public double energy(double[][][] timeFreqPhaseValues) {
+        double out = 0.0;
+        for (int i = 0; i < timeFreqPhaseValues.length; i++) for (int j = 0; j < timeFreqPhaseValues[i].length; j++) {
+            out += timeFreqPhaseValues[i][j][0]*timeFreqPhaseValues[i][j][0];
+        }
+        return out;
+    }
+    public double energy(double[][] timeFreqValues) {
+        double out = 0.0;
+        for (int i = 0; i < timeFreqValues.length; i++) for (int j = 0; j < timeFreqValues[i].length; j++) {
+            out += timeFreqValues[i][j]*timeFreqValues[i][j];
+        }
+        return out;
     }
 }

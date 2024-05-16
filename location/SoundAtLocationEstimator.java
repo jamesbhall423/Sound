@@ -10,14 +10,14 @@ public class SoundAtLocationEstimator <T extends SoundLocation<T>> {
     public SoundAtLocationEstimator<T> newInstance() {
         return new SoundAtLocationEstimator<>(samplingInterval, freqFracSmear, samplesPerInterval);
     }
-    private double samplingInterval;
-    private double freqFracSmear;
-    private int samplesPerInterval;
+    protected double samplingInterval;
+    protected double freqFracSmear;
+    protected int samplesPerInterval;
 
     // For use during calculation
-    private SoundRecording<T> mainRecording;
-    private List<SoundRecording<T>> otherRecordings;
-    private T testLocation;
+    protected SoundRecording<T> mainRecording;
+    protected List<SoundRecording<T>> otherRecordings;
+    protected T testLocation;
     public SoundAtLocationEstimator(double samplingInverval, double freqFracSmear, int samplesPerInterval) {
         this.samplingInterval = samplingInverval;
         this.freqFracSmear = freqFracSmear;
@@ -28,6 +28,7 @@ public class SoundAtLocationEstimator <T extends SoundLocation<T>> {
         this.testLocation = testLocation;
         mainRecording = getMainSoundRecording(recordings);
         otherRecordings = getOtherSoundRecordings(mainRecording, recordings);
+        otherRecordings = normalizeVolumeBasedOnDistance(mainRecording, otherRecordings);
         int intervals = (int)(mainRecording.sound.length() / samplingInterval);
         double[][][] mainTimeFreqPhaseImage = getTimeFreqPhaseImage(mainRecording,intervals);
         double[][] otherTimeFreqImage = new double[intervals][samplesPerInterval];
@@ -42,21 +43,21 @@ public class SoundAtLocationEstimator <T extends SoundLocation<T>> {
         }
         return mainRecording.sound.getSound(mainTimeFreqPhaseImage, mainRecording.sound.length());
     }
-    private double getWeight(SoundRecording<T> testRecording) {
+    protected double getWeight(SoundRecording<T> testRecording) {
         double distanceToLocation = testRecording.location.soundTraversalTime(testLocation);
         return distanceToLocation*distanceToLocation;
     }
-    private double getWeightSum(SoundRecording<T> mainRecording, List<SoundRecording<T>> otherRecordings) {
+    protected double getWeightSum(SoundRecording<T> mainRecording, List<SoundRecording<T>> otherRecordings) {
         double sum = 0.0;
         for (SoundRecording<T> testRecording: otherRecordings) sum += getWeight(testRecording);
         return sum;
     }
-    private void smear(double[][][] timeFreqPhaseImage, double[][] combinedOtherImage, double weightSum, SoundRecording<T> recording) {
+    protected void smear(double[][][] timeFreqPhaseImage, double[][] combinedOtherImage, double weightSum, SoundRecording<T> recording) {
         for (int interval = 0; interval < combinedOtherImage.length; interval++) for (int freqLevel = 0; freqLevel < combinedOtherImage[0].length; freqLevel++) {
             combinedOtherImage[interval][freqLevel] = getWeight(recording)*getSmearedValue(timeFreqPhaseImage[interval],freqLevel);
         }
     }
-    private double getSmearedValue(double[][] freqPhaseValues, int freqLevel) {
+    protected double getSmearedValue(double[][] freqPhaseValues, int freqLevel) {
         int absFreq = Math.min(freqLevel,freqPhaseValues.length-freqLevel)+1;
         double freqVar = freqFracSmear*freqLevel;
         int freqVarFloor = (int) freqVar;
@@ -76,7 +77,7 @@ public class SoundAtLocationEstimator <T extends SoundLocation<T>> {
     private boolean magnitudeGreater(int index, double[][] aray, double compare, double scale) {
         return valueInArray(index, aray) && magnitude(aray[index],scale)>compare;
     }
-    private double magnitude(double[] aray, double scale) {
+    protected double magnitude(double[] aray, double scale) {
         return scale*Math.hypot(aray[0],aray[1]);
     }
     private boolean valueInArray(int index, double[][] aray) {
@@ -90,20 +91,30 @@ public class SoundAtLocationEstimator <T extends SoundLocation<T>> {
         }
         return out;
     }
-    private void normalizeVolumeBasedOnDistance(SoundRecording<T> mainRecording, List<SoundRecording<T>> otherRecordings) {
-        for (SoundRecording<T> recording: otherRecordings) recording.sound = recording.sound.scaleVolume(recording.location.soundTraversalTime(testLocation)/mainRecording.location.soundTraversalTime(testLocation));
+    private List<SoundRecording<T>> normalizeVolumeBasedOnDistance(SoundRecording<T> mainRecording, List<SoundRecording<T>> otherRecordings) {
+        List<SoundRecording<T>> out = new ArrayList<>();
+        for (SoundRecording<T> recording: otherRecordings) out.add(new SoundRecording<T>(recording.sound.scaleVolume(recording.location.soundTraversalTime(testLocation)/mainRecording.location.soundTraversalTime(testLocation)),recording.location));
+        return out;
     }
 
-    private List<SoundRecording<T>> getOtherSoundRecordings(SoundRecording<T> mainRecording, SoundRecording<T>[] recordings) {
+    protected List<SoundRecording<T>> getOtherSoundRecordings(SoundRecording<T> mainRecording, SoundRecording<T>[] recordings) {
         List<SoundRecording<T>> out = new ArrayList<>(recordings.length-1);
         for (SoundRecording<T> recording: recordings) {
             if (recording!=mainRecording) out.add(recording);
         }
-        normalizeVolumeBasedOnDistance(mainRecording, out);
+        //normalizeVolumeBasedOnDistance(mainRecording, out);
         return out;
     }
 
-    private SoundRecording<T> getMainSoundRecording(SoundRecording<T>[] recordings) {
+    protected SoundRecording<T> getMainSoundRecording(SoundRecording<T>[] recordings) {
+        double minimumDistance = getMinimumDistance(recordings, testLocation);
+        for (SoundRecording<T> recording: recordings) {
+            if (recording.location.soundTraversalTime(testLocation) == minimumDistance) return recording;
+        }
+        assert false;
+        return null;
+    }
+    protected SoundRecording<T> getMainSoundRecording(List<SoundRecording<T>> recordings) {
         double minimumDistance = getMinimumDistance(recordings, testLocation);
         for (SoundRecording<T> recording: recordings) {
             if (recording.location.soundTraversalTime(testLocation) == minimumDistance) return recording;
@@ -114,6 +125,13 @@ public class SoundAtLocationEstimator <T extends SoundLocation<T>> {
 
     private double getMinimumDistance(SoundRecording<T>[] recordings, T testLocation) {
         double min = recordings[0].location.soundTraversalTime(testLocation);
+        for (SoundRecording<T> recording: recordings) {
+            if (recording.location.soundTraversalTime(testLocation)<min) min = recording.location.soundTraversalTime(testLocation);
+        }
+        return min;
+    }
+    private double getMinimumDistance(List<SoundRecording<T>> recordings, T testLocation) {
+        double min = recordings.get(0).location.soundTraversalTime(testLocation);
         for (SoundRecording<T> recording: recordings) {
             if (recording.location.soundTraversalTime(testLocation)<min) min = recording.location.soundTraversalTime(testLocation);
         }
